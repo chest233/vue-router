@@ -11,8 +11,10 @@ export function install (Vue) {
 
   const isDef = v => v !== undefined
 
+  // $route.matched[deep].instances 赋值
   const registerInstance = (vm, callVal) => {
     let i = vm.$options._parentVnode
+    // vm.$options._parentVnode.data.registerRouteInstance
     if (isDef(i) && isDef(i = i.data) && isDef(i = i.registerRouteInstance)) {
       i(vm, callVal)
     }

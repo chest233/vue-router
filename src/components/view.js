@@ -11,13 +11,14 @@ export default {
       default: 'default'
     }
   },
-  render (_, { props, children, parent, data }) {
+  render (_, context) {
+    let { props, children, parent, data } = context
+    console.log('context===', context)
     // used by devtools to display a router-view badge
     data.routerView = true
-
     // directly use parent context's createElement() function
     // so that components rendered by router-view can resolve named slots
-    const h = parent.$createElement
+    const h = parent.$createElement // vm类型, 为了具备解析具名插槽的能力
     const name = props.name
     const route = parent.$route
     const cache = parent._routerViewCache || (parent._routerViewCache = {})
@@ -25,7 +26,9 @@ export default {
     // determine current view depth, also check to see if the tree
     // has been toggled inactive but kept-alive.
     let depth = 0
-    let inactive = false
+    let inactive = false  // true: 当前的router-view组件，正处于一个keep-alive模式下且当前是非激活状态的tree当中
+    // 父组件不是是根组件(有vm.$options.router的)
+    console.log('judge==========', parent && parent._routerRoot !== parent, parent)
     while (parent && parent._routerRoot !== parent) {
       const vnodeData = parent.$vnode ? parent.$vnode.data : {}
       if (vnodeData.routerView) {
@@ -36,9 +39,11 @@ export default {
       }
       parent = parent.$parent
     }
+    console.log('depth====', depth)
     data.routerViewDepth = depth
 
     // render previous view if the tree is inactive and kept-alive
+    // 当前的router-view组件，正处于一个keep-alive模式下且当前是非激活状态的tree当中
     if (inactive) {
       const cachedData = cache[name]
       const cachedComponent = cachedData && cachedData.component
@@ -54,7 +59,6 @@ export default {
         return h()
       }
     }
-
     const matched = route.matched[depth]
     const component = matched && matched.components[name]
 
@@ -111,7 +115,7 @@ export default {
       })
       fillPropsinData(component, data, route, configProps)
     }
-
+    console.log('component, data, children', component, data, children)
     return h(component, data, children)
   }
 }

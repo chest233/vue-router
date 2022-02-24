@@ -48,6 +48,12 @@ export default class VueRouter {
     this.beforeHooks = []
     this.resolveHooks = []
     this.afterHooks = []
+    /**
+     * @property {function} match
+     * @property {function} addRoutes
+     * @property {function} addRoute
+     * @property {function} getRoutes
+     * */
     this.matcher = createMatcher(options.routes || [], this)
 
     let mode = options.mode || 'hash'
@@ -87,15 +93,20 @@ export default class VueRouter {
   }
 
   init (app: any /* Vue component instance */) {
+    console.log('init=============', app)
     process.env.NODE_ENV !== 'production' &&
       assert(
         install.installed,
         `not installed. Make sure to call \`Vue.use(VueRouter)\` ` +
           `before creating root instance.`
       )
-
+    /**
+     * 一个 router 被用于了多个 vm.$options.router
+     * 可能是在Vue实例中 new Vue({router,...})
+     * 也可能是在组件中 const comp = {router, data:{}, methods: {} ....}
+     * */
     this.apps.push(app)
-
+    console.log('apps=======', this.apps)
     // set up app destroyed handler
     // https://github.com/vuejs/vue-router/issues/2639
     app.$once('hook:destroyed', () => {
@@ -118,7 +129,6 @@ export default class VueRouter {
     this.app = app
 
     const history = this.history
-
     if (history instanceof HTML5History || history instanceof HashHistory) {
       const handleInitialScroll = routeOrError => {
         const from = history.current
@@ -133,6 +143,7 @@ export default class VueRouter {
         history.setupListeners()
         handleInitialScroll(routeOrError)
       }
+      // ***
       history.transitionTo(
         history.getCurrentLocation(),
         setupListeners,
