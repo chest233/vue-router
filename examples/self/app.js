@@ -21,6 +21,9 @@ const Qux = {
   },
   render (h) {
     return h('h5', {}, this.msg)
+  },
+  mounted () {
+    console.log('qux====', this)
   }
 }
 const Bar = {
@@ -46,25 +49,13 @@ const BarUi = {
   }
 }
 const Baz = {
-  name: 'Baz',
-  data () {
-    return {
-      msg: 'baz'
-    }
-  },
   render (h) {
-    return h('h5', {}, [this.msg, h(BazChild, [h('span', 'defualt'), h('span', { slot: 'header' }, 'header')])])
+    return h('h5', ['Baz', h(BazChild, [h('span', 'defualt'), h('span', { slot: 'header' }, 'header')])])
   }
 }
 const BazChild = {
-  name: 'BazChild',
-  data () {
-    return {
-      msg: 'BazChild'
-    }
-  },
   render (h) {
-    return h('h5', {}, [this.msg, '==', this.$slots.default, '==', this.$slots.header])
+    return h('h5', ['BazChild', h('br'), this.$slots.header, h('br'), this.$slots.default])
   }
 }
 
@@ -102,13 +93,11 @@ router.beforeResolve((to, from, next) => {
 new Vue({
   router,
   render (h) {
-    return h('div', [h('h1', 'App'),
-      h('router-link', { props: { to: '/foo/233' }}, 'to /foo/233'),
-      h('br'), h('br'),
-      h('router-link', { props: { to: '/foo/233/qux' }}, 'to /foo/233/qux'),
-      h('br'), h('br'),
-      h('router-link', { props: { to: '/bar' }}, 'to /bar'),
-      h('router-link', { props: { to: '/baz' }}, 'to /baz'),
+    return h('div', [h('h1', ''),
+      h('router-link', { props: { to: '/foo/233' }}, '/foo/233--'),
+      h('router-link', { props: { to: '/foo/233/qux' }}, '/foo/233/qux--'),
+      h('router-link', { props: { to: '/bar' }}, '/bar--'),
+      h('router-link', { props: { to: '/baz' }}, '/baz--'),
       h('router-view'),
       h('router-view', {
         props: { name: 'bar-ui' }, scopedSlots: {
