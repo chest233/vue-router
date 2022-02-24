@@ -1,31 +1,81 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-Vue.use(VueRouter)
-
 const Foo = {
-  mounted () {
-    console.log('this==', this)
+  name: 'Foo',
+  data () {
+    return {
+      msg: 'foo'
+    }
   },
   render (h) {
-    return h('div', [h('h1', 'Foo'), h('router-view')])
-  }
-}
-const Bar = {
-  template: `
-    <div>
-      <slot></slot>
-      <slot name="test" avatar="avatar"></slot>
-    </div>`,
-  mounted () {
-    console.log('====', this.$attrs)
+    return h('h5', {}, [this.msg, h('router-view')])
   }
 }
 const Qux = {
+  name: 'Qux',
+  data () {
+    return {
+      msg: 'qux'
+    }
+  },
   render (h) {
-    return h('h1', { style: { color: 'red' }}, 'Qux')
+    return h('h5', {}, this.msg)
   }
 }
+const Bar = {
+  name: 'Bar',
+  data () {
+    return {
+      msg: 'bar'
+    }
+  },
+  render (h) {
+    return h('h5', {}, this.msg)
+  }
+}
+const BarUi = {
+  name: 'BarUi',
+  data () {
+    return {
+      msg: 'baBarUir'
+    }
+  },
+  render (h) {
+    return h('h5', {}, [this.msg, this.$scopedSlots.default({ age: 123 }), this.$scopedSlots.header({ age: 2333 })])
+  }
+}
+const Baz = {
+  name: 'Baz',
+  data () {
+    return {
+      msg: 'baz'
+    }
+  },
+  render (h) {
+    return h('h5', {}, [this.msg, h(BazChild, [h('span', 'defualt'), h('span', { slot: 'header' }, 'header')])])
+  }
+}
+const BazChild = {
+  name: 'BazChild',
+  data () {
+    return {
+      msg: 'BazChild'
+    }
+  },
+  render (h) {
+    return h('h5', {}, [this.msg, '==', this.$slots.default, '==', this.$slots.header])
+  }
+}
+
+Vue.component('Foo', Foo)
+Vue.component('Qux', Qux)
+Vue.component('Bar', Bar)
+Vue.component('BarUi', BarUi)
+Vue.component('Baz', Baz)
+Vue.component('BazChild', BazChild)
+
+Vue.use(VueRouter)
 
 const router = new VueRouter({
   routes: [
@@ -33,39 +83,39 @@ const router = new VueRouter({
       path: '/foo/:id(\\d+)',
       components: { default: Foo },
       children: [
-        { name: 'qux', path: 'qux', component: Qux, props: { name: 'huihui', age: 5 }}
+        { path: 'qux', component: Qux }
       ]
     },
-    { path: '/bar/', components: { default: Bar }}
+    { path: '/bar', components: { 'default': Bar, 'bar-ui': BarUi }},
+    { path: '/baz', components: { 'default': Baz }}
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  console.log('beforeEach====', from)
-  console.log('beforeEach====', to)
   next()
 })
 
 router.beforeResolve((to, from, next) => {
-  console.log('beforeResolve====', from)
-  console.log('beforeResolve====', to)
   next()
 })
 
 new Vue({
-  router, template: `
-    <div id='app'>
-      <h1>APP</h1>
-      <li><router-link to='/foo/123'>go foo</router-link></li>
-      <li><router-link to='/foo/122333/qux'>go qux</router-link></li>
-      <li><router-link to='/bar'>go bar</router-link></li>
-      <br>
-      <router-view title="title">
-        <template #test='{avatar}'>
-        <p>{{avatar}}</p>
-        </template>
-        <p>流云诸葛</p>
-      </router-view>
-    </div>
-  `
+  router,
+  render (h) {
+    return h('div', [h('h1', 'App'),
+      h('router-link', { props: { to: '/foo/233' }}, 'to /foo/233'),
+      h('br'), h('br'),
+      h('router-link', { props: { to: '/foo/233/qux' }}, 'to /foo/233/qux'),
+      h('br'), h('br'),
+      h('router-link', { props: { to: '/bar' }}, 'to /bar'),
+      h('router-link', { props: { to: '/baz' }}, 'to /baz'),
+      h('router-view'),
+      h('router-view', {
+        props: { name: 'bar-ui' }, scopedSlots: {
+          default: props => h('h1', props.age),
+          header: props => h('h1', props.age)
+        }
+      })
+    ])
+  }
 }).$mount('#app')
