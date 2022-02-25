@@ -89,13 +89,13 @@ const BazChild = {
   }
 }
 
-Vue.component('Foo', Foo)
-Vue.component('Qux', Qux)
-Vue.component('Quux', Quux)
-Vue.component('Bar', Bar)
-Vue.component('BarUi', BarUi)
-Vue.component('Baz', Baz)
-Vue.component('BazChild', BazChild)
+Vue.component('Foo', Foo) // 嵌套父路由
+Vue.component('Qux', Qux) // 嵌套子路由
+Vue.component('Quux', Quux) // 嵌套子路由
+Vue.component('Bar', Bar) // 含有函数式组件
+Vue.component('BarUi', BarUi) // 路由 components 指定name && $scopedSlots
+Vue.component('Baz', Baz) // 父组件 指定 named slot 参数
+Vue.component('BazChild', BazChild) //  named $slots
 
 Vue.use(VueRouter)
 
