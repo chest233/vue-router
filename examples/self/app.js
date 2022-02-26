@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+// import FnComp2 from './FnComp2.vue'
 
 const Foo = {
   name: 'Foo',
@@ -21,10 +22,39 @@ const Qux = {
     }
   },
   render (h) {
-    return h('h5', {}, this.msg)
+    return h('h5', {}, [this.msg, h(QuxChild)])
   },
   mounted () {
     console.log('mounted====qux', this)
+  }
+}
+const QuxChild = {
+  name: 'QuxChild',
+  data () {
+    return {
+      msg: 'QuxChild'
+    }
+  },
+  render (h) {
+    return h('h5', {}, ['<' + this.msg + '>', h(QuxSubChild)])
+  },
+  mounted () {
+    console.log('mounted====QuxChild', this)
+  }
+}
+const QuxSubChild = {
+  name: 'QuxSubChild',
+  data () {
+    return {
+      msg: 'QuxSubChild'
+    }
+  },
+  render (h) {
+    return h('h5', {}, ['<' + this.msg + '>', h('div', {}, [h('router-view')])])
+    // return h('h5', {}, ['<' + this.msg + '>', h('div', [h('keep-alive', {}, [h('router-view')])])])
+  },
+  mounted () {
+    console.log('mounted====QuxSubChild', this)
   }
 }
 
@@ -43,6 +73,21 @@ const Quux = {
   }
 }
 
+const Quy = {
+  name: 'Quy',
+  data () {
+    return {
+      msg: 'quy'
+    }
+  },
+  render (h) {
+    return h('h5', {}, this.msg)
+  },
+  mounted () {
+    console.log('mounted====quy', this)
+  }
+}
+
 const Bar = {
   name: 'Bar',
   data () {
@@ -57,13 +102,14 @@ const Bar = {
 const FnComp = {
   functional: true,
   render (h, context) {
-    console.log('======$parent222', context.parent) // 函数式组件不能作为$parent
+    console.log('context======', context) // 函数式组件不能作为$parent
     return h('div', ['FnComp====' + context.props.title, h(FnCompChild)])
   }
 }
 const FnCompChild = {
   render (h) {
     console.log('======$parent', this.$parent) // 找到上级的第一个非函数式组件
+    console.log('======$parent==this', this) // 找到上级的第一个非函数式组件
     return h('div', 'FnCompChild====')
   }
 }
@@ -90,8 +136,9 @@ const BazChild = {
 }
 
 Vue.component('Foo', Foo) // 嵌套父路由
-Vue.component('Qux', Qux) // 嵌套子路由
-Vue.component('Quux', Quux) // 嵌套子路由
+Vue.component('Qux', Qux) // 二级嵌套子路由
+Vue.component('Quux', Quux) // 二级嵌套子路由
+Vue.component('Quy', Quy) // 三级嵌套子路由
 Vue.component('Bar', Bar) // 含有函数式组件
 Vue.component('BarUi', BarUi) // 路由 components 指定name && $scopedSlots
 Vue.component('Baz', Baz) // 父组件 指定 named slot 参数
@@ -105,7 +152,7 @@ const router = new VueRouter({
       path: '/foo/:id(\\d+)',
       components: { default: Foo },
       children: [
-        { path: 'qux', component: Qux },
+        { path: 'qux', component: Qux, children: [{ path: 'quy', component: Quy }] },
         { path: 'quux', component: Quux }
       ]
     },
@@ -129,6 +176,8 @@ new Vue({
       h('router-link', { props: { to: '/foo/233/qux' }}, '/foo/233/qux'),
       h('br'),
       h('router-link', { props: { to: '/foo/233/quux' }}, '/foo/233/quux'),
+      h('br'),
+      h('router-link', { props: { to: '/foo/233/qux/quy' }}, '/foo/233/qux/quy'),
       h('br'),
       h('router-link', { props: { to: '/bar' }}, '/bar'),
       h('br'),
