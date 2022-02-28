@@ -19,15 +19,18 @@ export default {
     // directly use parent context's createElement() function
     // so that components rendered by router-view can resolve named slots
     const h = parent.$createElement // vm类型, 为了具备解析具名插槽的能力
+    // const h = _ // vm类型, 为了具备解析具名插槽的能力
     const name = props.name
+    console.log('name====', name)
     const route = parent.$route
+    // 组件缓存存在父组件中, 所以要确保父组件活着, 才能被缓存
     const cache = parent._routerViewCache || (parent._routerViewCache = {})
 
     // determine current view depth, also check to see if the tree
     // has been toggled inactive but kept-alive.
     let depth = 0
     let inactive = false  // true: 当前的router-view组件，正处于一个keep-alive模式下且当前是非激活状态的tree当中
-    // 父组件不是是根组件(有vm.$options.router的)
+    // 结束条件 父组件不是是根组件(有vm.$options.router的)
     console.log('judge==========', parent && parent._routerRoot !== parent, parent)
     while (parent && parent._routerRoot !== parent) {
       const vnodeData = parent.$vnode ? parent.$vnode.data : {}
@@ -37,13 +40,15 @@ export default {
       if (vnodeData.keepAlive && parent._directInactive && parent._inactive) {
         inactive = true
       }
+      // 循环条件: 向上递归, 找到一个router-view,depth++,  inactive=true条件todo
       parent = parent.$parent
     }
     console.log('depth====', depth)
     data.routerViewDepth = depth
 
     // render previous view if the tree is inactive and kept-alive
-    // 当前的router-view组件，正处于一个keep-alive模式下且当前是非激活状态的tree当中
+    // 当前的router-view组件，正处于一个keep-alive模式下,且当前是非激活状态的tree当中
+    // 把这个需要缓存的组件, 缓存起来
     if (inactive) {
       const cachedData = cache[name]
       const cachedComponent = cachedData && cachedData.component
@@ -69,7 +74,9 @@ export default {
     }
 
     // cache component
+    // 无论是否需要被缓存组件, 这里都会先存下来
     cache[name] = { component }
+    console.log('cache======--', cache)
 
     // attach instance registration hook
     // this will be called in the instance's injected lifecycle hooks
@@ -116,7 +123,9 @@ export default {
       fillPropsinData(component, data, route, configProps)
     }
     console.log('component, data, children', component, data, children)
-    return h(component, data, children)
+    const vnode = h(component, data, children)
+    console.log('vnode-------', vnode)
+    return vnode
   }
 }
 
