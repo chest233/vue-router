@@ -104,12 +104,14 @@ export default {
 
     // also register instance in prepatch hook
     // in case the same component instance is reused across different routes
+    // 在相同的组件实例重用在不同的路线(也可能是 不同的 params)
     ;(data.hook || (data.hook = {})).prepatch = (_, vnode) => {
       matched.instances[name] = vnode.componentInstance
     }
 
     // register instance in init hook
-    // in case kept-alive component be actived when routes changed
+    // in case kept-alive component be actived when routes
+    // 当路由变化，组件位于keep-alive模式下，并且从inactive恢复到active时，在init函数内部，也是更新了matched.instances
     data.hook.init = (vnode) => {
       if (vnode.data.keepAlive &&
         vnode.componentInstance &&
