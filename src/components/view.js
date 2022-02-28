@@ -21,7 +21,10 @@ export default {
     const h = parent.$createElement // vm类型, 为了具备解析具名插槽的能力
     // const h = _ // vm类型, 为了具备解析具名插槽的能力
     const name = props.name
-    console.log('name====', name)
+    // parent.$route的访问，会建立parent与_route之间的依赖关系，
+    // 当_route变化的时候，parent就会render
+    // 这才是router-view组件只要渲染过一次，在route变化时
+    // router-view组件无论是什么情况，都会重新render的根本原因
     const route = parent.$route
     // 组件缓存存在父组件中, 所以要确保父组件活着, 才能被缓存
     const cache = parent._routerViewCache || (parent._routerViewCache = {})
@@ -47,10 +50,13 @@ export default {
     data.routerViewDepth = depth
 
     // render previous view if the tree is inactive and kept-alive
-    // 当前的router-view组件，正处于一个keep-alive模式下,且当前是非激活状态的tree当中
+    // 真正缓存的时机, 当前的router-view组件，正处于一个keep-alive模式下,且当前是非激活状态的tree当中
     // 把这个需要缓存的组件, 缓存起来
+    // ** inactive 是为了处理根路由 keep-alive, 在嵌套路由中, 处于非活跃状态的子路由
+    // 在 parent 中渲染好
     if (inactive) {
-      const cachedData = cache[name]
+      console.log('inactive=========')
+      const cachedData = cache[name] // 缓存存在parent中
       const cachedComponent = cachedData && cachedData.component
       if (cachedComponent) {
         // #2301
@@ -58,7 +64,11 @@ export default {
         if (cachedData.configProps) {
           fillPropsinData(cachedComponent, data, cachedData.route, cachedData.configProps)
         }
-        return h(cachedComponent, data, children)
+        // 返回的这个vnode也是inactive的，就是不可见的。因为如果直接返回h()，
+        // 则会导致cachedComponent本应该保持的状态丢失，也就是会把inactive的节点实例给销毁了。
+        // 当cachedComponent从inactive恢复到active时，之前的状态就都丢了。从devtools调试发现，当直接return h()，
+        // router-view对应的节点已经不再是之前的component了。这会导致keep-alive的不一致性。
+        return h(cachedComponent, data, children) // 为了缓存, 只是得到了 vnode, 并不会展示在页面
       } else {
         // render previous empty view
         return h()
@@ -80,6 +90,7 @@ export default {
 
     // attach instance registration hook
     // this will be called in the instance's injected lifecycle hooks
+    // beforeCreate 和 destroyed 维护 matched.instances
     data.registerRouteInstance = (vm, val) => {
       // val could be undefined for unregistration
       const current = matched.instances[name]

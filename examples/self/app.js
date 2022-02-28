@@ -22,6 +22,7 @@ const Qux = {
     }
   },
   render (h) {
+    console.log('qux render===========')
     return h('h5', {}, [this.msg, h(QuxChild)])
   },
   mounted () {
@@ -50,6 +51,7 @@ const QuxSubChild = {
     }
   },
   render (h) {
+    console.log('qux render===========child')
     return h('h5', {}, ['<' + this.msg + '>', h('div', {}, [h('router-view')])])
     // return h('h5', {}, ['<' + this.msg + '>', h('div', [h('keep-alive', {}, [h('router-view')])])])
   },
@@ -102,7 +104,7 @@ const Bar = {
 const FnComp = {
   functional: true,
   render (h, context) {
-    console.log('context======', context) // 函数式组件不能作为$parent
+    // console.log('context======', context) // 函数式组件不能作为$parent
     return h('div', ['FnComp====' + context.props.title, h(FnCompChild)])
   }
 }
@@ -194,13 +196,13 @@ new Vue({
       //   })
       // ])
 
-      h('router-view'),
-      h('router-view', {
-        props: { name: 'bar-ui' }, scopedSlots: {
-          default: props => h('h1', props.age),
-          header: props => h('h1', props.age)
-        }
-      })
+      h('router-view')
+      // h('router-view', {
+      //   props: { name: 'bar-ui' }, scopedSlots: {
+      //     default: props => h('h1', props.age),
+      //     header: props => h('h1', props.age)
+      //   }
+      // })
       //
     ])
   }
