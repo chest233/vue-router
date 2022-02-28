@@ -121,7 +121,7 @@ const BarUi = {
     }
   },
   render (h) {
-    return h('h5', {}, [this.msg, this.$scopedSlots.default({ age: 123 }), this.$scopedSlots.header({ age: 2333 })])
+    return h('h5', {}, [this.msg, this.$scopedSlots.default({ age: 1111 }), this.$scopedSlots.header({ age: 2333 })])
   }
 }
 const Baz = {
@@ -170,7 +170,8 @@ new Vue({
     }
   },
   render (h) {
-    return h('div', [h('h1', ''),
+    return h('div', [
+      h('div', 'app'),
       h('router-link', { props: { to: '/foo/233' }}, '/foo/233'),
       h('br'),
       h('router-link', { props: { to: '/foo/233/qux' }}, '/foo/233/qux'),
