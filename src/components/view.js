@@ -52,8 +52,9 @@ export default {
     // render previous view if the tree is inactive and kept-alive
     // 真正缓存的时机, 当前的router-view组件，正处于一个keep-alive模式下,且当前是非激活状态的tree当中
     // 把这个需要缓存的组件, 缓存起来
-    // ** inactive 是为了处理根路由 keep-alive, 在嵌套路由中, 处于非活跃状态的子路由
-    // 在 parent 中渲染好
+    // ** inactive 是为了处理根路由 keep-alive, 在嵌套路由中, 处于非活跃状态的子路由, 在 parent 中渲染好
+    // ** eg.  /home/foo  /home 实在keepalive下,而foo不在, 例如 从/home/foo 切换到 /me, 会执行以下代码
+    // 再切换回 /home/foo 时home 和 foo 都不再mounted
     if (inactive) {
       console.log('inactive=========')
       const cachedData = cache[name] // 缓存存在parent中
