@@ -8,7 +8,7 @@ import { fillParams } from './util/params'
 import { createRouteMap } from './create-route-map'
 import { normalizeLocation } from './util/location'
 import { decode } from './util/query'
-
+// matcher对象的能力主要是两方面：一是进行路由匹配，二是动态添加路由定义
 export type Matcher = {
   match: (raw: RawLocation, current?: Route, redirectedFrom?: Location) => Route;
   addRoutes: (routes: Array<RouteConfig>) => void;
@@ -21,7 +21,11 @@ export function createMatcher (
   router: VueRouter
 ): Matcher {
   const { pathList, pathMap, nameMap } = createRouteMap(routes)
-
+  /**
+   * 路有配置的动态添加
+   * 闭包保持了(缓存了) pathList, pathMap, nameMap 这三个数据
+   * 所以只要createMatcher调用过一次, 后面再调用addRoutes的时候 这个数据都是有值的
+   * */
   function addRoutes (routes) {
     createRouteMap(routes, pathList, pathMap, nameMap)
   }
@@ -54,6 +58,7 @@ export function createMatcher (
     redirectedFrom?: Location
   ): Route {
     const location = normalizeLocation(raw, currentRoute, false, router)
+    console.log('location=====', location)
     const { name } = location
 
     if (name) {

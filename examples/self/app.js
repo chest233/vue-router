@@ -11,6 +11,7 @@ const Foo = {
   },
   render (h) {
     // return h('h5', {}, [this.msg, h('router-view')])
+    this.$router.addRoutes([])
     return h('h5', {}, [this.msg, h('keep-alive', [h('router-view')])])
   }
 }
@@ -207,3 +208,4 @@ new Vue({
     ])
   }
 }).$mount('#app')
+
