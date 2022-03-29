@@ -24,14 +24,14 @@ import { handleScroll } from '../util/scroll'
 
 export class History {
   router: Router
-  base: string
-  current: Route
-  pending: ?Route
-  cb: (r: Route) => void
-  ready: boolean
-  readyCbs: Array<Function>
-  readyErrorCbs: Array<Function>
-  errorCbs: Array<Function>
+  base: string  // 默认值: "/" 应用的基路径。例如，如果整个单页应用服务在 /app/ 下，然后 base 就应该设为 "/app/"
+  current: Route  // 当前的路由对象
+  pending: ?Route // 正在处理的路由对象
+  cb: (r: Route) => void  // 1.这个回调函数会通过this.listen注册, 2.在Router类中可以看到它, 3.UI更新是通过这个触发的
+  ready: boolean  // 状态变量，是否已初始化好
+  readyCbs: Array<Function>  // 初始化成功时的回调函数数组
+  readyErrorCbs: Array<Function>  // 初始化失败时的回调函数数组
+  errorCbs: Array<Function> // 路由失败时的回调函数数组
   listeners: Array<Function>
   cleanupListeners: Function
 

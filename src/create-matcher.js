@@ -185,13 +185,13 @@ export function createMatcher (
     location: Location,
     redirectedFrom?: Location
   ): Route {
-    if (record && record.redirect) {
+    if (record && record.redirect) {  // 带重定向的
       return redirect(record, redirectedFrom || location)
     }
     if (record && record.matchAs) {
-      return alias(record, location, record.matchAs)
+      return alias(record, location, record.matchAs)  // 带别名的
     }
-    return createRoute(record, location, redirectedFrom, router)
+    return createRoute(record, location, redirectedFrom, router)  // 正常的
   }
 
   return {
