@@ -43,13 +43,13 @@ export class History {
     onComplete?: Function,
     onAbort?: Function
   ) => void
-  +ensureURL: (push?: boolean) => void
-  +getCurrentLocation: () => string
+  +ensureURL: (push?: boolean) => void  // 这个的作用是：更改浏览器地址，都在子类中实现
+  +getCurrentLocation: () => string // 这个的作用是：从浏览器地址中获取当前的路由访问路径，都在子类中实现
   +setupListeners: Function
 
   constructor (router: Router, base: ?string) {
     this.router = router
-    this.base = normalizeBase(base)
+    this.base = normalizeBase(base) // 正规化base option
     // start with a route object that stands for "nowhere"
     this.current = START
     this.pending = null
@@ -59,11 +59,12 @@ export class History {
     this.errorCbs = []
     this.listeners = []
   }
-
+  // 注册route updated成功时的回调函数
+  // 外部借助这个回调函数更新UI
   listen (cb: Function) {
     this.cb = cb
   }
-
+  // 添加ready相关的回调函数
   onReady (cb: Function, errorCb: ?Function) {
     if (this.ready) {
       cb()
@@ -74,11 +75,11 @@ export class History {
       }
     }
   }
-
+  // 添加失败时的回调函数
   onError (errorCb: Function) {
     this.errorCbs.push(errorCb)
   }
-
+  // 路由跳转
   transitionTo (
     location: RawLocation,
     onComplete?: Function,
@@ -87,6 +88,7 @@ export class History {
     let route
     // catch redirect option https://github.com/vuejs/vue-router/issues/3201
     try {
+      // route变量就是即将要跳转的目标Route对象
       route = this.router.match(location, this.current)
     } catch (e) {
       this.errorCbs.forEach(cb => {
@@ -101,12 +103,13 @@ export class History {
       () => {
         this.updateRoute(route)
         onComplete && onComplete(route)
-        this.ensureURL()
+        this.ensureURL()  //  调用this.ensureURL更新浏览器地址，利用BOM History API(pushstate replacestate hash)
         this.router.afterHooks.forEach(hook => {
           hook && hook(route, prev)
         })
 
         // fire ready cbs once
+        // 下面仅执行一次
         if (!this.ready) {
           this.ready = true
           this.readyCbs.forEach(cb => {
@@ -118,6 +121,7 @@ export class History {
         if (onAbort) {
           onAbort(err)
         }
+        // 下面仅执行一次
         if (err && !this.ready) {
           // Initial redirection should not mark the history as ready yet
           // because it's triggered by the redirection instead
@@ -133,10 +137,16 @@ export class History {
       }
     )
   }
-
+  // 确认
   confirmTransition (route: Route, onComplete: Function, onAbort?: Function) {
     const current = this.current
     this.pending = route
+    /* 有以下几种场景会导致abort执行：(可能只适用于上个版本..)
+      跳转重复，触发NavigationDuplicated
+      在执行guards函数过程中，检测到路由发生了变化，要中断之前的路由
+      在guards函数执行时，用户在guards函数内调用了next(false)手工中断了路由
+      在guards函数执行时，用户在guards函数内调用了next(newLocation: RawLocation)切换了路由
+      捕获到异常 */
     const abort = err => {
       // changed after adding errors with
       // https://github.com/vuejs/vue-router/pull/3047 before that change,
@@ -170,6 +180,12 @@ export class History {
       return abort(createNavigationDuplicatedError(current, route))
     }
 
+    /* matched 数组里面是什么呢？它里面存放的是与route对象关联的RouteRecord记录。
+      resolveQueue函数的作用是从两个matched数组中，
+      1. 解析出哪些RouteRecord接下来是要做updated处理的，
+      2. 哪些是接下来要进行deactivated处理的，
+      3. 哪些接下来是要进行activated处理的
+       */
     const { updated, deactivated, activated } = resolveQueue(
       this.current.matched,
       route.matched
@@ -190,9 +206,15 @@ export class History {
 
     const iterator = (hook: NavigationGuard, next) => {
       if (this.pending !== route) {
+        // pending代表一种路由处理的状态
+        // 如果在调用过程pending不再等于外部闭包内的route，说明路由发生了变化
+        // 所以原先的route就应该被取消掉
         return abort(createNavigationCancelledError(current, route))
       }
       try {
+        // hook就是guard
+        // 所以hook的第三个参数，就是guard的第三个参数next
+        // 如 beforeEnter: (to, from, next) => {...}
         hook(route, current, (to: any) => {
           if (to === false) {
             // next(false) -> abort navigation, ensure current URL
@@ -215,6 +237,7 @@ export class History {
             }
           } else {
             // confirm transition and pass on the value
+            // 下面的next参数实际上runQueue传进来的，调用它就能让runQueue自动调用下一个guard
             next(to)
           }
         })
@@ -226,6 +249,7 @@ export class History {
     runQueue(queue, iterator, () => {
       // wait until async components are resolved before
       // extracting in-component enter guards
+      // 当queue对应的所有guard都完成了调用时，就会进入这里
       const enterGuards = extractEnterGuards(activated)
       const queue = enterGuards.concat(this.router.resolveHooks)
       runQueue(queue, iterator, () => {
@@ -242,10 +266,11 @@ export class History {
       })
     })
   }
-
+  // Route对象更新
+  // 前面的this.cb会在这里面被调用
   updateRoute (route: Route) {
     this.current = route
-    this.cb && this.cb(route)
+    this.cb && this.cb(route) // 外部借此回调函数更新UI
   }
 
   setupListeners () {
@@ -297,15 +322,24 @@ function resolveQueue (
 } {
   let i
   const max = Math.max(current.length, next.length)
+  // 接下来的这个for循环，是为了得到一个i值
+  // 从0开始遍历，直到两个matched数组，相同的i，对应的元素不是同一个为止
+  // 这里用的是全不等号，所以判断的是元素的引用是否相同，也就是判断它们是否为同1个RouteRecord对象
+  // 如果current与next不存在嵌套关系，那么这个i值一般来说就是0
+  // 如果它们存在嵌套关系，那么这个值就不一定是0了
   for (i = 0; i < max; i++) {
     if (current[i] !== next[i]) {
       break
     }
   }
+  // 假如当前地址是/a/b/c，那么当前matched大概是：[a, b, c]；接下来如果要访问的是/a/d，那么目标matched应该是：[a,d]，按照resolveQueue的处理，最后结果就是：
+  // updated: [a],
+  // activated: [d],
+  // deactivated: [b,c]
   return {
-    updated: next.slice(0, i),
-    activated: next.slice(i),
-    deactivated: current.slice(i)
+    updated: next.slice(0, i),  // next数组中[0,i)这个部分是属于被update的RouteRecords
+    activated: next.slice(i), // next数组中[i, next.length)这个元素对应的恰好是要被激活的RouteRecords
+    deactivated: current.slice(i) // current数组中[i,next.length)这个部分属于被deactived的RouteRecords
   }
 }
 
