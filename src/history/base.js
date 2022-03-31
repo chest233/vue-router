@@ -190,18 +190,19 @@ export class History {
       this.current.matched,
       route.matched
     )
-
+    // queue是个数组，存放了大部分的guards（官方文档介绍的那些守卫函数）
+    // queue里面的每个元素要么是空的，要么是一个回调函数，如果是一个回调函数的话，还满足这个形式： (to, from, next) => { ... }
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
-      extractLeaveGuards(deactivated),
+      extractLeaveGuards(deactivated),  // 也就是官方文档中介绍的路由导航守卫beforeRouteLeave
       // global before hooks
-      this.router.beforeHooks,
+      this.router.beforeHooks,  // 也就是官方文档中介绍的全局前置守卫beforeEach
       // in-component update hooks
-      extractUpdateHooks(updated),
+      extractUpdateHooks(updated),  // 也就是官方文档中介绍的路由导航守卫beforeRouteUpdate
       // in-config enter guards
-      activated.map(m => m.beforeEnter),
+      activated.map(m => m.beforeEnter),  // 也就是官方文档中介绍的路由独享的守卫beforeEnter
       // async components
-      resolveAsyncComponents(activated)
+      resolveAsyncComponents(activated) // 异步组件解析
     )
 
     const iterator = (hook: NavigationGuard, next) => {
@@ -332,6 +333,9 @@ function resolveQueue (
       break
     }
   }
+  //   /a/b/c
+  //   /a/b
+
   // 假如当前地址是/a/b/c，那么当前matched大概是：[a, b, c]；接下来如果要访问的是/a/d，那么目标matched应该是：[a,d]，按照resolveQueue的处理，最后结果就是：
   // updated: [a],
   // activated: [d],
@@ -349,7 +353,17 @@ function extractGuards (
   bind: Function,
   reverse?: boolean
 ): Array<?Function> {
+  // def, instance, match, key这四个参数都是在flatMapComponents这个函数内部从records里面解析出来的
+  // def是组件定义的对象
+  // instance是从record.instances数组内读出的vue实例
+  // match是RouteRecord本身
+  // key对应到的就是router-view的name属性
   const guards = flatMapComponents(records, (def, instance, match, key) => {
+    console.log('flatMapComponents======records', records)
+    console.log('flatMapComponents======def', def)
+    console.log('flatMapComponents======instance', instance)
+    console.log('flatMapComponents======match', match)
+    console.log('flatMapComponents======key', key)
     const guard = extractGuard(def, name)
     if (guard) {
       return Array.isArray(guard)
@@ -372,6 +386,10 @@ function extractGuard (
 }
 
 function extractLeaveGuards (deactivated: Array<RouteRecord>): Array<?Function> {
+  // 为什么最后一个参数要传true，代表最后要把guards逆序处理
+  // deactivated这个数组的元素顺序实际上代表的是组件的嵌套关系
+  // 在beforeRouteLeave这个guard处理时，显然应该先执行子组件的beforeRouteLeave guard，再执行父级的
+  // 这个顺序跟deactivated数组的元素顺序是相反的，所以需要逆序
   return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true)
 }
 

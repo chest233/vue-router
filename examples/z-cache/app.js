@@ -24,6 +24,14 @@ const Foo = {
   },
   mounted () {
     console.log('foo mounted====')
+  },
+  beforeRouteEnter (to, from, next) {
+    console.log('beforeRouteEnter=====Foo', to, from)
+    next()
+  },
+  beforeRouteUpdate (to, from, next) {
+    console.log('beforeRouteUpdate=====Foo', to, from)
+    next()
   }
 }
 
@@ -56,8 +64,30 @@ const router = new VueRouter({
         { path: 'bar', component: Bar }
       ]
     },
-    { path: '/me', component: Me }
+    {
+      path: '/me', component: Me, beforeEnter: (to, from, next) => {
+        console.log('beforeEnter to=====', to)
+        console.log('beforeEnter from=====', from)
+        next()
+      }
+    }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  console.log('beforeEach to=====', to)
+  console.log('beforeEach from=====', from)
+  next()
+})
+router.beforeResolve((to, from, next) => {
+  console.log('beforeResolve to=====', to)
+  console.log('beforeResolve from=====', from)
+  // setTimeout(next, 2000)
+  next()
+})
+router.afterEach((to, from) => {
+  console.log('afterEach to=====', to)
+  console.log('afterEach from=====', from)
 })
 
 new Vue({
