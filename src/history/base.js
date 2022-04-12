@@ -365,12 +365,14 @@ function extractGuards (
     console.log('flatMapComponents======match', match)
     console.log('flatMapComponents======key', key)
     const guard = extractGuard(def, name)
+    console.log('guard====', guard)
     if (guard) {
       return Array.isArray(guard)
         ? guard.map(guard => bind(guard, instance, match, key))
         : bind(guard, instance, match, key)
     }
   })
+  console.log('guards=====', guards)
   return flatten(reverse ? guards.reverse() : guards)
 }
 
@@ -378,9 +380,11 @@ function extractGuard (
   def: Object | Function,
   key: string
 ): NavigationGuard | Array<NavigationGuard> {
+  console.log('def===', def)
   if (typeof def !== 'function') {
     // extend now so that global mixins are applied.
     def = _Vue.extend(def)
+    console.log('def=====22', def, def.options)
   }
   return def.options[key]
 }
